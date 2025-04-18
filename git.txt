@@ -16,3 +16,6 @@ git push
 
 Se você quer fazer tudo direto (pra uso rápido):
 git add . && git commit -m "sua mensagem" && git push
+
+Verificar qual branch estou
+git branch
