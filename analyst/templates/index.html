@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistente Financeiro IA</title>
+    <style>
+        :root {
+            --bg-dark: #1e1e2e;
+            --bg-light: #282a36;
+            --text-primary: #f8f8f2;
+            --text-secondary: #bd93f9;
+            --accent: #8be9fd;
+            --success: #50fa7b;
+            --warning: #ffb86c;
+            --danger: #ff5555;
+            --border-color: #44475a;
+            --chat-user: #3a3a4c;
+            --chat-ai: #252535;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            background-color: var(--bg-light);
+            padding: 15px 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            color: var(--accent);
+        }
+        
+        .logo h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 0 20px;
+            overflow: hidden;
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .message {
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 100%;
+            position: relative;
+        }
+        
+        .user-message {
+            background-color: var(--chat-user);
+            align-self: flex-start;
+            width: 100%;
+        }
+        
+        .ai-message {
+            background-color: var(--chat-ai);
+            align-self: flex-start;
+            width: 100%;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .user-avatar {
+            background-color: var(--accent);
+            color: var(--bg-dark);
+        }
+        
+        .ai-avatar {
+            background-color: var(--text-secondary);
+            color: var(--bg-dark);
+        }
+        
+        .message-sender {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .message-content {
+            line-height: 1.7;
+            font-size: 15px;
+        }
+        
+        .ai-content-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .tab {
+            padding: 6px 12px;
+            background-color: var(--bg-light);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .tab.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .tab:hover:not(.active) {
+            border-color: var(--border-color);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: var(--bg-light);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-top: 16px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        
+        .section-content {
+            margin-bottom: 16px;
+        }
+        
+        .analysis-list {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+        
+        .analysis-list li {
+            margin-bottom: 6px;
+        }
+        
+        .money-value {
+            color: var(--success);
+            font-weight: 500;
+        }
+        
+        .percent-value {
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table th {
+            background-color: var(--chat-user);
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: rgba(68, 71, 90, 0.3);
+        }
+        
+        .code-block {
+            background-color: rgba(40, 42, 54, 0.7);
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .input-area {
+            padding: 20px 0;
+            position: sticky;
+            bottom: 0;
+            background-color: var(--bg-dark);
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .textarea-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 56px;
+            max-height: 200px;
+            padding: 16px;
+            background-color: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 15px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+        
+        textarea::placeholder {
+            color: rgba(248, 248, 242, 0.6);
+        }
+        
+        .send-button {
+            background-color: var(--text-secondary);
+            color: var(--bg-dark);
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin: 10px;
+            transition: background-color 0.2s ease;
+        }
+        
+        .send-button:hover {
+            background-color: var(--accent);
+        }
+        
+        .send-button svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .examples-area {
+            margin-top: 10px;
+        }
+        
+        .examples-toggle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            width: fit-content;
+        }
+        
+        .examples-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            overflow-y: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease;
+        }
+        
+        .examples-container.show {
+            max-height: 200px;
+        }
+        
+        .example-chip {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 6px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: border-color 0.2s ease;
+        }
+        
+        .example-chip:hover {
+            border-color: var(--accent);
+        }
+        
+        .loading {
+            display: none;
+            padding: 20px;
+            background-color: var(--chat-ai);
+            border-radius: 8px;
+            align-self: flex-start;
+            width: 100%;
+        }
+        
+        .loading-dots {
+            display: flex;
+            gap: 4px;
+            padding: 10px 0;
+        }
+        
+        .loading-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--text-secondary);
+            opacity: 0.6;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        
+        .loading-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        .error-message {
+            display: none;
+            background-color: rgba(255, 85, 85, 0.2);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 14px;
+            border: 1px solid var(--danger);
+        }
+        
+        @media (max-width: 768px) {
+            main {
+                padding: 0 10px;
+            }
+            
+            .message {
+                padding: 15px;
+            }
+        }
+        
+        /* Estilos para rolagem */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <svg class="logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"></path>
+                <path d="M12 4v12"></path>
+                <path d="M6 8h12"></path>
+            </svg>
+            <h1>Assistente Financeiro IA</h1>
+        </div>
+    </header>
+
+    <main>
+        <div class="chat-container" id="chatContainer">
+            <div class="ai-message message">
+                <div class="message-header">
+                    <div class="avatar ai-avatar">A</div>
+                    <div class="message-sender">Assistente Financeiro</div>
+                </div>
+                <div class="message-content">
+                    Olá! Sou seu assistente financeiro inteligente. Você pode me perguntar qualquer coisa sobre seus dados financeiros e eu vou analisar e fornecer insights para você.
+                    <br><br>
+                    Por exemplo, tente perguntar:
+                    <ul class="analysis-list">
+                        <li>Qual foi o total gasto em janeiro?</li>
+                        <li>Compare minhas despesas do primeiro trimestre</li>
+                        <li>Quais foram os 3 maiores gastos do mês passado?</li>
+                        <li>Quanto investi em 2023?</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="message-header">
+                <div class="avatar ai-avatar">A</div>
+                <div class="message-sender">Assistente Financeiro</div>
+            </div>
+            <div class="loading-dots">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            Não foi possível processar sua consulta. Por favor, tente novamente.
+        </div>
+
+        <div class="input-area">
+            <div class="input-container">
+                <div class="textarea-wrapper">
+                    <textarea id="pergunta" placeholder="Faça uma pergunta sobre seus dados financeiros..." rows="1"></textarea>
+                </div>
+                <button id="btnEnviar" class="send-button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="examples-area">
+                <div class="examples-toggle" id="examplesToggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    Exemplos de perguntas
+                </div>
+                <div class="examples-container" id="examplesContainer">
+                    <div class="example-chip">Qual foi o total gasto em janeiro?</div>
+                    <div class="example-chip">Compare minhas despesas do primeiro trimestre</div>
+                    <div class="example-chip">Quais foram os 3 maiores gastos do mês passado?</div>
+                    <div class="example-chip">Quanto investi em 2023?</div>
+                    <div class="example-chip">Qual categoria teve mais gastos este ano?</div>
+                    <div class="example-chip">Como meus gastos de saúde variaram ao longo do ano?</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chatContainer');
+            const perguntaTextarea = document.getElementById('pergunta');
+            const btnEnviar = document.getElementById('btnEnviar');
+            const loading = document.getElementById('loading');
+            const errorMessage = document.getElementById('errorMessage');
+            const examplesToggle = document.getElementById('examplesToggle');
+            const examplesContainer = document.getElementById('examplesContainer');
+            const exampleChips = document.querySelectorAll('.example-chip');
+            
+            // Ajustar altura do textarea automaticamente
+            perguntaTextarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // Mostrar/esconder exemplos
+            examplesToggle.addEventListener('click', function() {
+                examplesContainer.classList.toggle('show');
+            });
+            
+            // Usar exemplos ao clicar
+            exampleChips.forEach(chip => {
+                chip.addEventListener('click', () => {
+                    perguntaTextarea.value = chip.textContent;
+                    perguntaTextarea.style.height = 'auto';
+                    perguntaTextarea.style.height = (perguntaTextarea.scrollHeight) + 'px';
+                    perguntaTextarea.focus();
+                });
+            });
+            
+            // Enviar pergunta com Enter (sem Shift)
+            perguntaTextarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    btnEnviar.click();
+                }
+            });
+            
+            // Criar mensagem do usuário
+            function adicionarMensagemUsuario(pergunta) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'user-message message';
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <div class="avatar user-avatar">U</div>
+                        <div class="message-sender">Você</div>
+                    </div>
+                    <div class="message-content">${pergunta}</div>
+                `;
+                chatContainer.appendChild(messageDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            // Criar mensagem da IA
+            function adicionarMensagemIA(data) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'ai-message message';
+                
+                let analiseHtml = formatAnalise(data.analise_dados);
+                
+                const tabsHtml = `
+                    <div class="tabs">
+                        <div class="tab active" data-tab="analise-${Date.now()}">Análise</div>
+                        <div class="tab" data-tab="dados-${Date.now()}">Dados</div>
+                        <div class="tab" data-tab="sql-${Date.now()}">SQL</div>
+                    </div>
+                `;
+                
+                const analiseContentHtml = `
+                    <div class="tab-content active" id="analise-${Date.now()}">
+                        ${analiseHtml}
+                    </div>
+                `;
+                
+                const dadosContentHtml = `
+                    <div class="tab-content" id="dados-${Date.now()}">
+                        ${createDataTable(data.resultados_sql)}
+                    </div>
+                `;
+                
+                const sqlContentHtml = `
+                    <div class="tab-content" id="sql-${Date.now()}">
+                        <div class="code-block">${data.sql_gerado}</div>
+                    </div>
+                `;
+                
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <div class="avatar ai-avatar">A</div>
+                        <div class="message-sender">Assistente Financeiro</div>
+                    </div>
+                    <div class="message-content">
+                        <div class="ai-content-container">
+                            ${analiseHtml}
+                            ${tabsHtml}
+                            ${analiseContentHtml}
+                            ${dadosContentHtml}
+                            ${sqlContentHtml}
+                        </div>
+                    </div>
+                `;
+                
+                chatContainer.appendChild(messageDiv);
+                
+                // Adicionar event listeners para as abas
+                const tabs = messageDiv.querySelectorAll('.tab');
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabName = tab.getAttribute('data-tab');
+                        
+                        // Atualizar classes ativas das abas
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        
+                        // Atualizar conteúdo visível
+                        const tabContents = messageDiv.querySelectorAll('.tab-content');
+                        tabContents.forEach(content => content.classList.remove('active'));
+                        messageDiv.querySelector(`#${tabName}`).classList.add('active');
+                    });
+                });
+                
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+            
+            // Formatar a análise para HTML com destaque para números e termos importantes
+            function formatAnalise(analise) {
+                if (!analise) return '<p>Nenhuma análise disponível.</p>';
+                
+                // Identificar seções por cabeçalhos
+                const secoes = analise.split(/(\b[A-Z][A-Z\s]+:)/g);
+                let htmlFormatado = '';
+                
+                // Se não houver seções claras, tratar como texto simples
+                if (secoes.length === 1) {
+                    // Destacar valores monetários e percentuais
+                    return formatarConteudo(analise);
+                }
+                
+                for (let i = 0; i < secoes.length; i++) {
+                    if (i % 2 === 1) { // É um cabeçalho
+                        const cabecalho = secoes[i].replace(':', '');
+                        htmlFormatado += `<h3 class="section-title">${cabecalho}</h3>`;
+                    } else if (secoes[i].trim()) { // É conteúdo
+                        htmlFormatado += `<div class="section-content">${formatarConteudo(secoes[i])}</div>`;
+                    }
+                }
+                
+                return htmlFormatado;
+            }
+            
+            // Função auxiliar para formatar o conteúdo
+            function formatarConteudo(conteudo) {
+                // Detectar listas com marcadores
+                if (conteudo.includes('* ') || conteudo.includes('- ')) {
+                    const linhas = conteudo.split('\n');
+                    let formatado = '';
+                    let emLista = false;
+                    
+                    linhas.forEach(linha => {
+                        const trimmed = linha.trim();
+                        if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+                            if (!emLista) {
+                                formatado += '<ul class="analysis-list">';
+                                emLista = true;
+                            }
+                            
+                            // Destacar valores no item da lista
+                            let itemConteudo = trimmed.substring(2)
+                                .replace(/R\$\s*[\d.,]+/g, match => `<span class="money-value">${match}</span>`)
+                                .replace(/(\d+[,.]\d+%)/g, match => `<span class="percent-value">${match}</span>`)
+                                .replace(/(aumento|diminuição|crescimento|redução)(\s+de\s+)(\d+[,.]\d+%)/gi, 
+                                    (match, termo, prep, valor) => {
+                                        const classe = /aumento|crescimento/i.test(termo) ? "money-value" : "percent-value";
+                                        return `<span class="${classe}">${termo}${prep}${valor}</span>`;
+                                    });
+                            
+                            formatado += `<li>${itemConteudo}</li>`;
+                        } else {
+                            if (emLista) {
+                                formatado += '</ul>';
+                                emLista = false;
+                            }
+                            
+                            if (trimmed) {
+                                // Destacar valores no parágrafo
+                                let paragConteudo = trimmed
+                                    .replace(/R\$\s*[\d.,]+/g, match => `<span class="money-value">${match}</span>`)
+                                    .replace(/(\d+[,.]\d+%)/g, match => `<span class="percent-value">${match}</span>`)
+                                    .replace(/(aumento|diminuição|crescimento|redução)(\s+de\s+)(\d+[,.]\d+%)/gi, 
+                                        (match, termo, prep, valor) => {
+                                            const classe = /aumento|crescimento/i.test(termo) ? "money-value" : "percent-value";
+                                            return `<span class="${classe}">${termo}${prep}${valor}</span>`;
+                                        });
+                                
+                                formatado += `<p>${paragConteudo}</p>`;
+                            }
+                        }
+                    });
+                    
+                    if (emLista) formatado += '</ul>';
+                    return formatado;
+                } else {
+                    // Formatar parágrafo simples
+                    return conteudo.split('\n\n')
+                        .map(p => {
+                            if (!p.trim()) return '';
+                            return `<p>${p
+                                .replace(/R\$\s*[\d.,]+/g, match => `<span class="money-value">${match}</span>`)
+                                .replace(/(\d+[,.]\d+%)/g, match => `<span class="percent-value">${match}</span>`)
+                                .replace(/(aumento|diminuição|crescimento|redução)(\s+de\s+)(\d+[,.]\d+%)/gi, 
+                                    (match, termo, prep, valor) => {
+                                        const classe = /aumento|crescimento/i.test(termo) ? "money-value" : "percent-value";
+                                        return `<span class="${classe}">${termo}${prep}${valor}</span>`;
+                                    })
+                            }</p>`;
+                        })
+                        .join('');
+                }
+            }
+            
+            // Criar tabela HTML para mostrar os dados
+            function createDataTable(dados) {
+                if (!dados || dados.length === 0) {
+                    return '<p>Nenhum dado disponível.</p>';
+                }
+                
+                const headers = Object.keys(dados[0]);
+                
+                let tableHtml = '<table class="data-table">';
+                
+                // Cabeçalho
+                tableHtml += '<thead><tr>';
+                headers.forEach(header => {
+                    tableHtml += `<th>${header}</th>`;
+                });
+                tableHtml += '</tr></thead>';
+                
+                // Corpo da tabela
+                tableHtml += '<tbody>';
+                dados.forEach(row => {
+                    tableHtml += '<tr>';
+                    headers.forEach(header => {
+                        // Formatar valores monetários
+                        if (typeof row[header] === 'number' && header.toLowerCase().includes('valor')) {
+                            tableHtml += `<td>R$ ${row[header].toFixed(2).replace('.', ',')}</td>`;
+                        } else {
+                            tableHtml += `<td>${row[header]}</td>`;
+                        }
+                    });
+                    tableHtml += '</tr>';
+                });
+                tableHtml += '</tbody></table>';
+                
+                return tableHtml;
+            }
+            
+            // Enviar pergunta para o backend
+            btnEnviar.addEventListener('click', async () => {
+                const pergunta = perguntaTextarea.value.trim();
+                
+                if (!pergunta) {
+                    return;
+                }
+                
+                // Limpar textarea e resetar altura
+                adicionarMensagemUsuario(pergunta);
+                perguntaTextarea.value = '';
+                perguntaTextarea.style.height = 'auto';
+                
+                // Mostrar loading e esconder erro
+                loading.style.display = 'block';
+                errorMessage.style.display = 'none';
+                btnEnviar.disabled = true;
+                
+                // Scroll para o loading
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+                
+                try {
+                    const response = await fetch('/ask', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ pergunta })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Erro na requisição');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Esconder loading
+                    loading.style.display = 'none';
+                    
+                    // Processar resultados
+                    if (data.analise_dados) {
+                        adicionarMensagemIA(data);
+                    } else {
+                        errorMessage.textContent = 'Não foi possível gerar uma análise para esta pergunta.';
+                        errorMessage.style.display = 'block';
+                    }
+                } catch (error) {
+                    console.error('Erro:', error);
+                    loading.style.display = 'none';
+                    errorMessage.style.display = 'block';
+                } finally {
+                    btnEnviar.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

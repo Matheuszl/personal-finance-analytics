@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Extrato Bancário</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #121212;
+            padding-top: 50px;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 600px;
+        }
+        .upload-area {
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .upload-icon {
+            font-size: 50px;
+            color: #7e57c2;
+        }
+        .file-input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #444444;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+        }
+        .file-input:hover {
+            border-color: #7e57c2;
+        }
+        .btn-upload {
+            width: 100%;
+            padding: 10px;
+            background-color: #7e57c2;
+            border-color: #7e57c2;
+        }
+        .btn-upload:hover {
+            background-color: #6a46b8;
+            border-color: #6a46b8;
+        }
+        .alert-success {
+            background-color: #2e7d32;
+            color: #e0e0e0;
+            border-color: #1b5e20;
+        }
+        .alert-danger {
+            background-color: #c62828;
+            color: #e0e0e0;
+            border-color: #b71c1c;
+        }
+        .selected-file {
+            margin-top: 10px;
+            font-style: italic;
+            color: #9e9e9e;
+        }
+        .progress {
+            margin-top: 20px;
+            display: none;
+            background-color: #424242;
+        }
+        .progress-bar {
+            background-color: #7e57c2;
+        }
+        footer {
+            margin-top: 30px;
+            color: #9e9e9e;
+            text-align: center;
+        }
+        h2, h5 {
+            color: #e0e0e0;
+        }
+        ul {
+            color: #bdbdbd;
+        }
+        .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="upload-area">
+            <h2 class="text-center mb-4">Upload de Extrato Bancário</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <div class="text-center mb-4">
+                <i class="upload-icon bi bi-file-earmark-excel"></i>
+            </div>
+            
+            <form action="/" method="post" enctype="multipart/form-data" id="upload-form">
+                <div class="file-input-container">
+                    <input type="file" name="file" id="file-input" accept=".xls,.xlsx" class="d-none">
+                    <div class="file-input py-4" id="file-drop-area">
+                        <p class="mb-0">Arraste e solte seu arquivo Excel ou clique para selecionar</p>
+                    </div>
+                    <div class="selected-file" id="selected-file-name"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-upload" id="upload-button">
+                    Enviar e Processar
+                </button>
+                
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+            </form>
+            
+            <div class="mt-4">
+                <h5>Instruções:</h5>
+                <ul>
+                    <li>Selecione um arquivo no formato Excel (.xls ou .xlsx)</li>
+                    <li>Clique em "Enviar e Processar" para iniciar o processamento</li>
+                    <li>Os dados serão processados e salvos automaticamente no banco de dados</li>
+                </ul>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2025 Gestão Financeira</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileDropArea = document.getElementById('file-drop-area');
+            const fileInput = document.getElementById('file-input');
+            const selectedFileName = document.getElementById('selected-file-name');
+            const uploadForm = document.getElementById('upload-form');
+            const uploadButton = document.getElementById('upload-button');
+            const progressBar = document.querySelector('.progress');
+            const progressBarInner = document.querySelector('.progress-bar');
+            
+            // Evento de clique na área de upload
+            fileDropArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+            
+            // Evento de arrastar sobre a área
+            fileDropArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                fileDropArea.style.borderColor = '#7e57c2';
+            });
+            
+            // Evento de sair da área
+            fileDropArea.addEventListener('dragleave', function() {
+                fileDropArea.style.borderColor = '#444444';
+            });
+            
+            // Evento de soltar o arquivo
+            fileDropArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                fileDropArea.style.borderColor = '#444444';
+                
+                if (e.dataTransfer.files.length) {
+                    fileInput.files = e.dataTransfer.files;
+                    updateFileName();
+                }
+            });
+            
+            // Evento de mudança do input de arquivo
+            fileInput.addEventListener('change', updateFileName);
+            
+            // Atualiza o nome do arquivo selecionado
+            function updateFileName() {
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name;
+                    selectedFileName.textContent = `Arquivo selecionado: ${fileName}`;
+                } else {
+                    selectedFileName.textContent = '';
+                }
+            }
+            
+            // Evento de envio do formulário
+            uploadForm.addEventListener('submit', function(e) {
+                if (!fileInput.files.length) {
+                    e.preventDefault();
+                    alert('Por favor, selecione um arquivo primeiro.');
+                    return;
+                }
+                
+                // Mostra a barra de progresso e desabilita o botão
+                progressBar.style.display = 'flex';
+                uploadButton.disabled = true;
+                uploadButton.textContent = 'Processando...';
+                
+                // Simulação de progresso
+                let progress = 0;
+                const interval = setInterval(function() {
+                    progress += 5;
+                    progressBarInner.style.width = `${Math.min(progress, 95)}%`;
+                    
+                    if (progress >= 95) {
+                        clearInterval(interval);
+                    }
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>

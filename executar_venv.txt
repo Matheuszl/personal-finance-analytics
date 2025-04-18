@@ -1,0 +1,17 @@
+Como abir o ambiente virtual:
+
+Criar:
+python -m venv venv
+
+Executar:
+.\venv\Scripts\Activate.ps1
+Ou:
+venv\Scripts\activate.bat
+Ou:
+source venv/Scripts/activate
+
+Antes de sair execute:
+deactivate
+
+Executar requirements:
+pip install -r requirements.txt

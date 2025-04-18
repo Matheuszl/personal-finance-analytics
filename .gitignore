@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Desabilita ir para o github os arquivos que são enviados para o processo de data enginer
+\uploads
+
 # C extensions
 *.so
 

@@ -1,0 +1,18 @@
+Verificar o que mudou no projeto
+git status
+
+Adicionar tudo de uma vez
+git add .
+
+Adicionar arquivos separados
+git add app.py requirements.txt
+
+Criar um commit:
+git commit -m "mensagem de exemplo"
+git commit -m "Atualiza dependências e adiciona conexão com banco MySQL"
+
+git push
+
+
+Se você quer fazer tudo direto (pra uso rápido):
+git add . && git commit -m "sua mensagem" && git push
